@@ -2,12 +2,12 @@
 package main
 
 import (
-  "context"
-  "fmt"
-  "log"
+	"context"
+	"fmt"
+	"log"
 
-  vault "github.com/hashicorp/vault/api"
-  auth "github.com/hashicorp/vault/api/auth/kubernetes"
+	vault "github.com/hashicorp/vault/api"
+	auth "github.com/hashicorp/vault/api/auth/kubernetes"
 )
 
 func stringlistFromSecrets(secret *vault.Secret) []string {
@@ -29,29 +29,29 @@ func stringlistFromSecrets(secret *vault.Secret) []string {
 }
 
 func test(url string, role string) error {
-  	config := vault.DefaultConfig()
-  	config.Address = url
+	config := vault.DefaultConfig()
+	config.Address = url
 
-  	client, err := vault.NewClient(config)
-  	if err != nil {
-    	return fmt.Errorf("[vault] unable to initialize Vault client: %w", err)
-  	}
+	client, err := vault.NewClient(config)
+	if err != nil {
+		return fmt.Errorf("[vault] unable to initialize Vault client: %w", err)
+	}
 
-    k8sAuth, err := auth.NewKubernetesAuth(
-    	role,
-    	auth.WithServiceAccountTokenPath("/var/run/secrets/kubernetes.io/serviceaccount/token"),
-    )
-    if err != nil {
-    	return fmt.Errorf("[vault] unable to initialize Kubernetes auth method: %w", err)
-    }
+	k8sAuth, err := auth.NewKubernetesAuth(
+		role,
+		auth.WithServiceAccountTokenPath("/var/run/secrets/kubernetes.io/serviceaccount/token"),
+	)
+	if err != nil {
+		return fmt.Errorf("[vault] unable to initialize Kubernetes auth method: %w", err)
+	}
 
-    authInfo, err := client.Auth().Login(context.TODO(), k8sAuth)
-    if err != nil {
-    	return fmt.Errorf("[vault] unable to log in with Kubernetes auth: %w", err)
-    }
-    if authInfo == nil {
-    	return fmt.Errorf("[vault] no auth info was returned after login")
-  	}
+	authInfo, err := client.Auth().Login(context.TODO(), k8sAuth)
+	if err != nil {
+		return fmt.Errorf("[vault] unable to log in with Kubernetes auth: %w", err)
+	}
+	if authInfo == nil {
+		return fmt.Errorf("[vault] no auth info was returned after login")
+	}
 
 	s, err := client.Logical().List("secret/metadata")
 	secrets := stringlistFromSecrets(s)
@@ -63,7 +63,7 @@ func test(url string, role string) error {
 		return fmt.Errorf("[vault] unable to read secret: %w", err)
 	}
 	log.Println(secret)
-  	return nil
+	return nil
 }
 
 func main() {
